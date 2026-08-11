@@ -26,7 +26,7 @@ export default function OrderBook({ up, down, marketTitle, connected }) {
   const downAsk = down.asks[0]?.price
 
   return (
-    <div className="panel book-panel">
+    <div className="panel book-panel glass">
       <div className="panel-head">
         <span className="panel-title">Стакан · {marketTitle || 'Up/Down'}</span>
         <span className="panel-title mono" style={{ color: 'var(--text-2)' }}>{asks.length + bids.length} lvl</span>

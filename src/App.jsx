@@ -4,41 +4,22 @@ import Tape from './components/Tape'
 import PriceChart from './components/PriceChart'
 import OrderBook from './components/OrderBook'
 import TransactionLog from './components/TransactionLog'
-import { useBinancePrice } from './hooks/useBinancePrice'
 import { usePolymarketMarket } from './hooks/usePolymarketMarket'
 import { usePolymarketBook } from './hooks/usePolymarketBook'
+import { usePriceHistory } from './hooks/usePriceHistory'
 
-const ASSETS = {
-  BTCUSDT: { asset: 'btc', symbol: 'btcusdt' },
-  ETHUSDT: { asset: 'eth', symbol: 'ethusdt' },
-}
+const ASSET = 'btc'
 
 export default function App() {
-  const [marketKey, setMarketKey] = useState('BTCUSDT')
   const [interval, setInterval_] = useState('5m')
-  const [range, setRange] = useState('30')
-  const [strikePrice, setStrikePrice] = useState(null)
   const [msLeft, setMsLeft] = useState(0)
 
-  const { asset, symbol } = ASSETS[marketKey]
-  const { price, prevClose, candles, connected: priceConnected } = useBinancePrice(symbol)
-  const { market, error: marketError } = usePolymarketMarket(asset, interval)
+  const { market, error: marketError } = usePolymarketMarket(ASSET, interval)
   const { up, down, trades, connected: bookConnected } = usePolymarketBook(
     market?.upTokenId,
     market?.downTokenId
   )
-
-  // страйк — сбрасываем на каждую смену рынка (новое окно/актив/интервал),
-  // затем фиксируем первой доступной ценой Binance для этого окна
-  useEffect(() => {
-    setStrikePrice(null)
-  }, [market?.slug])
-
-  useEffect(() => {
-    if (market && price != null) {
-      setStrikePrice((prev) => (prev == null ? price : prev))
-    }
-  }, [market?.slug, price])
+  const { points, price, openValue, loading: priceLoading, error: priceError } = usePriceHistory(market, interval)
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -50,28 +31,22 @@ export default function App() {
   return (
     <div className="app">
       <Tape trades={trades} />
-      <Header
-        marketKey={marketKey}
-        setMarketKey={setMarketKey}
-        interval={interval}
-        setInterval={setInterval_}
-        connected={priceConnected && bookConnected}
-      />
+      <Header interval={interval} setInterval={setInterval_} connected={bookConnected} />
       <div className="layout">
         <PriceChart
-          symbol={marketKey}
+          interval={interval}
+          points={points}
           price={price}
-          prevClose={prevClose}
-          candles={candles}
-          range={range}
-          setRange={setRange}
-          strikePrice={strikePrice}
+          openValue={openValue}
+          strikePrice={openValue}
           msLeft={msLeft}
+          loading={priceLoading}
+          error={priceError}
         />
         <OrderBook up={up} down={down} marketTitle={market?.title} connected={bookConnected} />
         <TransactionLog trades={trades} connected={bookConnected} />
       </div>
-      {marketError && <div className="market-error-banner mono">{marketError}</div>}
+      {marketError && <div className="market-error-banner glass mono">{marketError}</div>}
     </div>
   )
 }

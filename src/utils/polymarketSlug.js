@@ -1,16 +1,15 @@
 const GAMMA = 'https://gamma-api.polymarket.com'
 
 export const INTERVALS = {
-  '5m': { seconds: 300, label: '5M' },
-  '15m': { seconds: 900, label: '15M' },
-  '1h': { seconds: 3600, label: '1H' },
-  '1d': { seconds: 86400, label: '1D' },
+  '5m': { seconds: 300, label: '5M', variant: 'fiveminute', twapLookback: 30, pollMs: 30000 },
+  '15m': { seconds: 900, label: '15M', variant: 'fifteenminute', twapLookback: 30, pollMs: 30000 },
+  '4h': { seconds: 14400, label: '4H', variant: 'fourhour', twapLookback: 60, pollMs: 60000 },
 }
 
 /**
- * 5m / 15m — формат подтверждён и стабилен: btc-updown-5m-{unix_ts},
- * где ts кратен длине окна и берётся во floor от UTC-времени.
- * Никакого обращения к часовым поясам не требуется.
+ * 5m / 15m — формат slug подтверждён и стабилен: btc-updown-5m-{unix_ts},
+ * где ts кратен длине окна и берётся во floor от UTC-времени. Никакого
+ * обращения к часовым поясам не требуется.
  */
 function fastSlug(asset, interval) {
   const seconds = INTERVALS[interval].seconds
@@ -30,12 +29,10 @@ async function fetchBySlug(slug) {
 }
 
 /**
- * 1h / 1d — слаг завязан на Eastern Time (плавающий сдвиг из-за DST) и,
- * по наблюдениям сообщества, формат менялся (с годом/без года, дневной
- * слаг несёт дату закрытия окна в полдень ET). Строить его вручную —
- * источник тихих 404. Вместо этого ищем среди активных ивентов Gamma
- * по названию актива и окну [startDate, endDate], содержащему "сейчас".
- * Дороже одного запроса по слагу, зато не ломается при смене формата.
+ * 4h — как и 1h/1d, слаг завязан на Eastern Time (плавающий сдвиг из-за
+ * DST), и формат по наблюдениям сообщества менялся. Строить его вручную
+ * ненадёжно, поэтому ищем среди активных ивентов Gamma по названию и
+ * окну [startDate, endDate], содержащему текущий момент.
  */
 async function searchActiveMarket(asset, interval) {
   const assetName = asset === 'btc' ? 'bitcoin' : 'ethereum'
@@ -47,10 +44,13 @@ async function searchActiveMarket(asset, interval) {
   const now = Date.now()
 
   const candidates = events.filter((e) => {
-    const title = (e.title || e.slug || '').toLowerCase()
+    const title = (e.title || '').toLowerCase()
+    const slug = (e.slug || '').toLowerCase()
     if (!title.includes(assetName) || !title.includes('up or down')) return false
-    if (interval === '1h') return !title.includes('day') && !title.includes('week')
-    return title.includes('day') || /on-[a-z]+-\d/.test(e.slug || '')
+    if (interval === '4h') {
+      return slug.includes('-4h-') || title.includes('4 hour') || title.includes('4-hour')
+    }
+    return true
   })
 
   const withinWindow = candidates.find((e) => {

@@ -2,7 +2,7 @@ import { fmtCents } from '../utils/format'
 
 export default function Tape({ trades }) {
   const items = trades.slice(0, 16)
-  if (items.length === 0) return <div className="tape" />
+  if (items.length === 0) return <div className="tape glass" />
 
   const renderItems = (keyPrefix) =>
     items.map((t) => (
@@ -15,7 +15,7 @@ export default function Tape({ trades }) {
     ))
 
   return (
-    <div className="tape">
+    <div className="tape glass">
       <div className="tape-track">
         {renderItems('a')}
         {renderItems('b')}

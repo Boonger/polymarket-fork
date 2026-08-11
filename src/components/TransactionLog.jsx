@@ -9,7 +9,7 @@ export default function TransactionLog({ trades, connected }) {
   }, [trades.length])
 
   return (
-    <div className="panel console-panel">
+    <div className="panel console-panel glass">
       <div className="panel-head">
         <span className="panel-title">Лог транзакций</span>
         <span className="panel-title mono" style={{ color: 'var(--text-2)' }}>{trades.length} events</span>

@@ -1,33 +1,18 @@
-export default function Header({ marketKey, setMarketKey, interval, setInterval, connected }) {
-  const markets = [
-    { id: 'BTCUSDT', label: 'BTC' },
-    { id: 'ETHUSDT', label: 'ETH' },
-  ]
-  const intervals = [
-    { id: '5m', label: '5M' },
-    { id: '15m', label: '15M' },
-    { id: '1h', label: '1H' },
-    { id: '1d', label: '1D' },
-  ]
+import { INTERVALS } from '../utils/polymarketSlug'
+
+export default function Header({ interval, setInterval, connected }) {
+  const intervals = Object.keys(INTERVALS).map((id) => ({ id, label: INTERVALS[id].label }))
 
   return (
-    <header className="header">
+    <header className="header glass">
       <div className="brand">
         <span className="mark">◆</span>
-        cryptomarket<span style={{ color: 'var(--text-2)' }}>.terminal</span>
+        cryptomarket<span style={{ color: 'var(--ink-2)' }}>.terminal</span>
       </div>
 
-      <nav className="market-tabs" aria-label="Актив">
-        {markets.map((m) => (
-          <button
-            key={m.id}
-            className={`market-tab ${marketKey === m.id ? 'active' : ''}`}
-            onClick={() => setMarketKey(m.id)}
-          >
-            {m.label}
-          </button>
-        ))}
-      </nav>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--ink-1)' }}>
+        BTC
+      </div>
 
       <nav className="market-tabs" aria-label="Интервал">
         {intervals.map((iv) => (
@@ -41,9 +26,9 @@ export default function Header({ marketKey, setMarketKey, interval, setInterval,
         ))}
       </nav>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--text-1)' }} className="mono">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--ink-1)' }} className="mono">
         <span className={`status-dot ${connected ? '' : 'off'}`} />
-        {connected ? 'LIVE · POLYMARKET CLOB' : 'CONNECTING…'}
+        {connected ? 'LIVE · POLYMARKET' : 'CONNECTING…'}
       </div>
     </header>
   )
